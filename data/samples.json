@@ -1,0 +1,52 @@
+[
+  {
+    "id": "paypal-email",
+    "category": "email",
+    "badge": "Email Phishing",
+    "badge_class": "email",
+    "icon": "💳",
+    "label": "PayPal Account Suspension Phishing Email",
+    "description": "Spoofed headers, urgent 24h deadline, credential harvesting link.",
+    "input": "From: service@paypal-security-update.xyz\nReply-To: support@fraud-response-ticket.top\nSubject: Urgent: Your PayPal account has been suspended!\n\nDear customer,\n\nWe detected unauthorized access attempts on your account from an unknown IP address. Immediate action required: your account will be permanently blocked within 24 hours unless you verify your identity.\n\nClick here to confirm your credentials and update billing details: http://paypal.com.account-verification-service.xyz/login\n\nDo not reply to this email."
+  },
+  {
+    "id": "sunpass-sms",
+    "category": "sms",
+    "badge": "SMS / Smishing",
+    "badge_class": "sms",
+    "icon": "🚗",
+    "label": "SunPass Unpaid Toll Scam",
+    "description": "Urgent late fee fine, payment pressure, deceptive portal link.",
+    "input": "SunPass Notice: Our records indicate you have an unpaid toll invoice balance of $12.50. To avoid an immediate $50.00 late fee and court action, pay now via our portal: https://sunpass-toll-billing.click/pay?id=84729"
+  },
+  {
+    "id": "crypto-social",
+    "category": "message",
+    "badge": "Social Scam",
+    "badge_class": "social",
+    "icon": "🪙",
+    "label": "Crypto Doubler Giveaway",
+    "description": "High return promise, Telegram pivot lure, IP-based destination.",
+    "input": "CONGRATULATIONS! You have been selected as an exclusive giveaway winner! Elon Musk and Binance official airdrop: Send 0.1 BTC to claim 0.5 BTC instantly. Guaranteed return! Contact my mentor on Telegram @elon_airdrop_admin or tap here: http://192.168.1.55/binance-claim"
+  },
+  {
+    "id": "typosquat-url",
+    "category": "url",
+    "badge": "Malicious URL",
+    "badge_class": "url",
+    "icon": "🔤",
+    "label": "Typosquatted Brand Host",
+    "description": "Visual substitution (rnicrosoft), high-abuse .top TLD.",
+    "input": "http://rnicrosoft-verify-security.top/login.php"
+  },
+  {
+    "id": "legitimate-email",
+    "category": "email",
+    "badge": "Benign Baseline",
+    "badge_class": "safe",
+    "icon": "✉️",
+    "label": "Legitimate Developer Newsletter",
+    "description": "Open source release notes, standard unsubscribe footer.",
+    "input": "From: team@github.com\nSubject: GitHub Release Notes: New features available\n\nHello developer,\n\nHere are the latest release notes and updates to our open source repositories. You can review the pull request documentation and meeting notes on our main website.\n\nBest regards,\nThe GitHub Team\n\nUnsubscribe: https://github.com/settings/notifications"
+  }
+]

@@ -3,78 +3,26 @@ import math
 import re
 from urllib.parse import urlsplit
 
+from ai_engine import INTEL_MANAGER
 
-SHORTENERS = {
-    "bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "rb.gy",
-    "ow.ly", "buff.ly", "goo.gl", "tiny.cc", "bc.vc", "v.gd",
-    "rebrand.ly", "shorturl.at", "t.ly", "bl.ink", "hyperurl.co"
-}
-
-HIGH_ABUSE_TLDS = {
-    "xyz": "Frequently observed in low-cost disposable phishing registrations.",
-    "top": "High prevalence in automated malware and scam campaigns.",
-    "buzz": "Commonly leveraged in spam distribution and click-fraud.",
-    "work": "Commonly abused in spear phishing and fake invoice lures.",
-    "click": "Predominantly used for redirect chains and deceptive ads.",
-    "link": "Often exploited in generic credential harvesting lures.",
-    "stream": "High incidence in illegal streaming and phishing campaigns.",
-    "fit": "Frequently flagged in automated bulk scam registrations.",
-    "tk": "Historically high abuse rate as a free registration TLD.",
-    "ml": "Historically high abuse rate as a free registration TLD.",
-    "ga": "Historically high abuse rate as a free registration TLD.",
-    "cf": "Historically high abuse rate as a free registration TLD.",
-    "gq": "Historically high abuse rate as a free registration TLD.",
-    "country": "Elevated incidence in deceptive geopolitical and financial lures.",
-    "icu": "Common in bulk-purchased spam and deceptive domains.",
-    "cam": "Frequently abused in adult/blackmail extortion schemes.",
-    "rest": "Elevated presence in deceptive redirectors.",
-    "cfd": "Common in fake trading and cryptocurrency schemes.",
-    "sbs": "Frequent in fast-flux phishing campaigns.",
-    "monster": "Commonly flagged in disposable fraud websites."
-}
-
-TARGETED_BRANDS = {
-    "microsoft": "Microsoft (Office365 / Outlook / Azure)",
-    "apple": "Apple (iCloud / Apple ID)",
-    "google": "Google (Gmail / Drive / Security)",
-    "paypal": "PayPal (Payments / Invoices)",
-    "amazon": "Amazon (Orders / AWS)",
-    "netflix": "Netflix (Subscription / Account)",
-    "facebook": "Meta / Facebook",
-    "instagram": "Instagram",
-    "whatsapp": "WhatsApp",
-    "chase": "JPMorgan Chase Bank",
-    "wellsfargo": "Wells Fargo",
-    "bankofamerica": "Bank of America",
-    "citibank": "Citibank",
-    "coinbase": "Coinbase",
-    "binance": "Binance",
-    "metamask": "MetaMask Wallet",
-    "usps": "United States Postal Service (USPS)",
-    "fedex": "FedEx Delivery",
-    "dhl": "DHL Express",
-    "ups": "UPS Delivery",
-    "dropbox": "Dropbox",
-    "adobe": "Adobe Cloud",
-    "steam": "Steam / Valve Gaming",
-    "telegram": "Telegram Messenger",
-    "linkedin": "LinkedIn",
-    "spotify": "Spotify",
-    "walmart": "Walmart",
-    "irs": "Internal Revenue Service (IRS)"
-}
 
 MULTIPLE_PROTOCOL_PATTERN = re.compile(r"https?://.*https?://", re.I)
-URL_KEYWORD_PATTERN = re.compile(
-    r"(login|verify|secure|account|wallet|payment|banking|auth|update|signin|confirm|support|service)",
-    re.I,
-)
 
-HOMOGLYPH_MAP = {
-    "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p", "\u0441": "c",
-    "\u0443": "y", "\u0445": "x", "\u0456": "i", "\u0458": "j", "\u04bb": "h",
-    "\u03bf": "o", "\u03c1": "p", "\u03bd": "v", "\u03c9": "w"
-}
+# Dynamic references backed by ThreatIntelManager
+SHORTENERS = INTEL_MANAGER.shorteners
+HIGH_ABUSE_TLDS = INTEL_MANAGER.high_abuse_tlds
+TARGETED_BRANDS = INTEL_MANAGER.targeted_brands
+HOMOGLYPH_MAP = INTEL_MANAGER.homoglyphs
+URL_KEYWORD_PATTERN = INTEL_MANAGER.account_keywords_pattern
+
+
+def compute_vowel_consonant_ratio(text: str) -> float:
+    """Compute vowel-to-consonant ratio to detect algorithmic unpronounceable domains."""
+    alpha = [c.lower() for c in text if c.isalpha()]
+    if not alpha:
+        return 0.5
+    vowels = sum(1 for c in alpha if c in "aeiou")
+    return vowels / len(alpha)
 
 
 def compute_entropy(text: str) -> float:

@@ -1,0 +1,184 @@
+{
+  "targeted_brands": {
+    "microsoft": "Microsoft (Office365 / Outlook / Azure)",
+    "apple": "Apple (iCloud / Apple ID)",
+    "google": "Google (Gmail / Drive / Security)",
+    "paypal": "PayPal (Payments / Invoices)",
+    "amazon": "Amazon (Orders / AWS)",
+    "netflix": "Netflix (Subscription / Account)",
+    "facebook": "Meta / Facebook",
+    "instagram": "Instagram",
+    "whatsapp": "WhatsApp",
+    "chase": "JPMorgan Chase Bank",
+    "wellsfargo": "Wells Fargo",
+    "bankofamerica": "Bank of America",
+    "citibank": "Citibank",
+    "coinbase": "Coinbase",
+    "binance": "Binance",
+    "metamask": "MetaMask Wallet",
+    "usps": "United States Postal Service (USPS)",
+    "fedex": "FedEx Delivery",
+    "dhl": "DHL Express",
+    "ups": "UPS Delivery",
+    "dropbox": "Dropbox",
+    "adobe": "Adobe Cloud",
+    "steam": "Steam / Valve Gaming",
+    "telegram": "Telegram Messenger",
+    "linkedin": "LinkedIn",
+    "spotify": "Spotify",
+    "walmart": "Walmart",
+    "irs": "Internal Revenue Service (IRS)"
+  },
+  "high_abuse_tlds": {
+    "xyz": "Frequently observed in low-cost disposable phishing registrations.",
+    "top": "High prevalence in automated malware and scam campaigns.",
+    "buzz": "Commonly leveraged in spam distribution and click-fraud.",
+    "work": "Commonly abused in spear phishing and fake invoice lures.",
+    "click": "Predominantly used for redirect chains and deceptive ads.",
+    "link": "Often exploited in generic credential harvesting lures.",
+    "stream": "High incidence in illegal streaming and phishing campaigns.",
+    "fit": "Frequently flagged in automated bulk scam registrations.",
+    "tk": "Historically high abuse rate as a free registration TLD.",
+    "ml": "Historically high abuse rate as a free registration TLD.",
+    "ga": "Historically high abuse rate as a free registration TLD.",
+    "cf": "Historically high abuse rate as a free registration TLD.",
+    "gq": "Historically high abuse rate as a free registration TLD.",
+    "country": "Elevated incidence in deceptive geopolitical and financial lures.",
+    "icu": "Common in bulk-purchased spam and deceptive domains.",
+    "cam": "Frequently abused in adult/blackmail extortion schemes.",
+    "rest": "Elevated presence in deceptive redirectors.",
+    "cfd": "Common in fake trading and cryptocurrency schemes.",
+    "sbs": "Frequent in fast-flux phishing campaigns.",
+    "monster": "Commonly flagged in disposable fraud websites."
+  },
+  "shorteners": [
+    "bit.ly", "tinyurl.com", "t.co", "is.gd", "cutt.ly", "rb.gy",
+    "ow.ly", "buff.ly", "goo.gl", "tiny.cc", "bc.vc", "v.gd",
+    "rebrand.ly", "shorturl.at", "t.ly", "bl.ink", "hyperurl.co"
+  ],
+  "homoglyphs": {
+    "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p", "\u0441": "c",
+    "\u0443": "y", "\u0445": "x", "\u0456": "i", "\u0458": "j", "\u04bb": "h",
+    "\u03bf": "o", "\u03c1": "p", "\u03bd": "v", "\u03c9": "w"
+  },
+  "account_keywords": [
+    "login", "verify", "secure", "account", "wallet", "payment",
+    "banking", "auth", "update", "signin", "confirm", "support", "service"
+  ],
+  "linguistic_categories": {
+    "urgency": {
+      "name": "Urgent or threatening language",
+      "description": "The message uses urgency or threatens an account restriction.",
+      "weight": 20,
+      "patterns": [
+        "\\b(urgent|act now|immediately|account suspended|suspended|blocked|expire|final warning)\\b",
+        "\\b(immediate action|respond immediately|account locked|24 hours|48 hours|final courtesy notice|last chance)\\b",
+        "\\b(expiring soon|action required|critical alert|security notice|unauthorized access|security breach)\\b"
+      ]
+    },
+    "credentials": {
+      "name": "Requests for sensitive information",
+      "description": "The message mentions credentials or sensitive financial information.",
+      "weight": 25,
+      "patterns": [
+        "\\b(password|otp|pin|bank details|cvv|passcode|login details)\\b",
+        "\\b(passphrase|security code|one-time password|verification code|2fa code|mfa code|auth code)\\b",
+        "\\b(cvc|card number|social security|ssn|national insurance|tax id|login credentials|seed phrase|private key)\\b"
+      ]
+    },
+    "financial": {
+      "name": "Financial pressure",
+      "description": "The message applies pressure around a payment, transfer, or refund.",
+      "weight": 25,
+      "patterns": [
+        "\\b(send money|payment required|pay now|transfer money|refund|gift card|bank transfer)\\b",
+        "\\b(wire transfer|western union|moneygram|cashapp|venmo transfer|bitcoin|btc|ethereum|eth|crypto wallet|cryptocurrency payment|usdt)\\b",
+        "\\b(refund pending|claim refund|processing fee|tax due|overdue fee|toll fee|unpaid toll|ezpass|sunpass|invoice attached)\\b"
+      ]
+    },
+    "lures_and_greed": {
+      "name": "Suspicious reward or prize",
+      "description": "The message uses reward or prize wording commonly found in lures.",
+      "weight": 20,
+      "patterns": [
+        "\\b(you have won|winner|prize|lottery|claim your reward|claim reward|free gift)\\b",
+        "\\b(jackpot|sweepstakes|prize notification|claim prize|exclusive reward|cash grant|unclaimed funds|inheritance|beneficiary)\\b",
+        "\\b(giveaway|airdrop|guaranteed return|100x profit|selected as winner|congratulations you won)\\b"
+      ]
+    },
+    "verification_call_to_action": {
+      "name": "Suspicious verification request",
+      "description": "The message asks you to verify an account or identity, or to click through.",
+      "weight": 10,
+      "patterns": [
+        "\\b(verify your account|confirm your identity|click here|tap here|open this link|verify now)\\b",
+        "\\b(validate your account|follow this link|update your profile|reactivate your account|restore access)\\b",
+        "\\b(review document|sign document|docusign document|download attachment|click below|use the link below)\\b"
+      ]
+    },
+    "authority_impersonation": {
+      "name": "Authority & Brand Impersonation",
+      "description": "Spoofs well-known organizations, tech platforms, government bodies, or financial institutions.",
+      "weight": 20,
+      "patterns": [
+        "\\b(microsoft security team|apple support|google security alert)\\b",
+        "\\b(paypal fraud department|chase fraud alert|wells fargo security)\\b",
+        "\\b(usps delivery failure|fedex shipment notice|dhl customs clearance)\\b",
+        "\\b(internal revenue service|irs notice|department of revenue|law enforcement)\\b",
+        "\\b(meta security|instagram verification badge|whatsapp support team)\\b",
+        "\\b(geek squad|norton antivirus renewal|mcafee security subscription)\\b"
+      ]
+    },
+    "extortion_fear": {
+      "name": "Blackmail & Fear-Based Extortion",
+      "description": "Claims infection by spyware, recording webcam footage, or threatening public humiliation.",
+      "weight": 30,
+      "patterns": [
+        "\\b(i know your password|recorded you through your webcam|recorded video of you)\\b",
+        "\\b(compromised your device|pegasus spyware installed|trojan installed)\\b",
+        "\\b(send bitcoin or i will send|blackmail|ruin your reputation)\\b",
+        "\\b(warrant issued for your arrest|police warrant|court summons pending)\\b"
+      ]
+    }
+  },
+  "channel_rules": {
+    "sms_toll": {
+      "pattern": "(?i)\\b(sunpass|ez-?pass|toll|turnpike|tollway|unpaid toll|traffic violation)\\b",
+      "required_keywords": ["fee", "pay", "link", "http"],
+      "title": "Smishing: Fake Toll Violation / SunPass Scam Lure",
+      "detail": "Matches known SMS phishing campaigns impersonating toll services (e.g., SunPass, EZ-Pass) demanding immediate payment for unpaid tolls.",
+      "weight": 25
+    },
+    "sms_package": {
+      "pattern": "(?i)\\b(usps|fedex|ups|dhl|parcel|package|delivery|shipment|redelivery)\\b",
+      "required_keywords": ["address", "fee", "reschedule", "click", "http"],
+      "title": "Smishing: Fake Package Delivery Redelivery Scam",
+      "detail": "Matches SMS postal phishing lures impersonating USPS, FedEx, or DHL alleging an incomplete delivery address or customs fee.",
+      "weight": 25
+    },
+    "sms_bank": {
+      "pattern": "(?i)\\b(chase|wells fargo|bofa|citi|bank|debit card|locked|fraud alert)\\b",
+      "required_keywords": ["blocked", "locked", "verify"],
+      "title": "Smishing: Fake Bank Debit Card Lock Alert",
+      "detail": "Matches fraudulent SMS alerts impersonating financial institutions claiming card suspension to steal online banking logins.",
+      "weight": 30
+    },
+    "social_crypto": {
+      "pattern": "(?i)\\b(crypto|bitcoin|btc|eth|usdt|doubler|giveaway|airdrop|binance|metamask|100x|pump)\\b",
+      "pivot_pattern": "(?i)\\b(telegram|whatsapp|dm me|inbox me|contact my mentor|signal group)\\b",
+      "title": "Social Media Crypto / Investment Scam",
+      "detail": "Combines cryptocurrency promotion with redirection to unmonitored channels (e.g. Telegram / WhatsApp groups), a classic trading scam pattern.",
+      "weight": 25
+    },
+    "social_recovery": {
+      "pattern": "(?i)\\b(hacked account|account recovery|recover your account|fix your account|instagram ban)\\b",
+      "title": "Account Recovery / Password Reset Scam",
+      "detail": "Solicits victims of account lockouts or bans, falsely promising unauthorized account recovery for a fee.",
+      "weight": 25
+    }
+  },
+  "email_indicators": {
+    "generic_greeting": "(?i)\\b(dear (customer|user|client|member|account holder|sir/madam|valued customer)|hello dear)\\b",
+    "suspicious_attachments": "(?i)\\b\\w+\\.(exe|iso|scr|vbs|zip|rar|cab|bat|cmd|msi|hta|html|shtml)\\b"
+  }
+}

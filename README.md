@@ -103,13 +103,13 @@ The application will be running on port `5000`.
 
 ## 🧪 Running the Test Suite
 
-ThreatLens features a comprehensive unit test suite covering ML inference, linguistic pattern detection, brand typosquatting, email spoofing, and API endpoints:
+ThreatLens features a comprehensive unit test suite covering dynamic ML training, linguistic pattern detection, brand typosquatting, email spoofing, and API endpoints:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-All 22 unit tests run offline in milliseconds with zero external API dependencies.
+All 26 unit tests run offline in milliseconds with zero external API dependencies.
 
 ---
 
@@ -126,54 +126,35 @@ All 22 unit tests run offline in milliseconds with zero external API dependencie
 }
 ```
 
-**Response (Sample):**
-```json
-{
-  "score": 90,
-  "level": "high",
-  "risk": "High",
-  "type": "Email",
-  "advice": "Avoid clicking links or sharing personal information.",
-  "findings": [
-    {
-      "title": "Mismatched Sender and Reply-To Addresses",
-      "detail": "The message claims to be from 'paypal-security.xyz', but responses are directed to 'scam.top'."
-    },
-    {
-      "title": "Urgent or threatening language",
-      "detail": "The message uses urgency or threatens an account restriction."
-    },
-    {
-      "title": "Suspected brand impersonation: PayPal (Payments / Invoices)",
-      "detail": "Targeted brand 'PayPal' found in subdomain, disguising destination 'verify-login.xyz'."
-    }
-  ],
-  "ai_analysis": {
-    "ml_probability": 0.985,
-    "ml_verdict": "High Confidence Phishing / Scam",
-    "ml_percentage": 98.5,
-    "top_features": [
-      { "token": "suspended", "weight": 4.8, "sentiment": "Phishing Signal" },
-      { "token": "urgent", "weight": 4.2, "sentiment": "Phishing Signal" }
-    ]
-  }
-}
-```
-
 ### 2. Batch Scan Endpoint
 `POST /api/batch`
 
 Accepts an array of up to 20 URLs or messages for rapid SOC screening.
 
-### 3. Samples Endpoint
+### 3. Dynamic Threat Intelligence Status
+`GET /api/threat-intel`
+
+Returns active vector counts, targeted brand counts, high-abuse TLD counts, and ML vocabulary size.
+
+### 4. Hot-Reload Threat Feeds
+`POST /api/threat-intel/reload`
+
+Instantly reloads threat intelligence rules, brand catalogs, TLD tables, and channel lures from `data/threat_intelligence.json` at runtime without server restarts.
+
+### 5. Runtime ML Model Retraining
+`POST /api/retrain`
+
+Dynamically retrains the probabilistic classifier with an array of labeled samples (`[{"text": "...", "label": 1}]`), immediately updating TF-IDF vocabulary weights and prior log-odds.
+
+### 6. Dynamic Samples Endpoint
 `GET /api/samples`
 
-Returns pre-configured attack vectors (PayPal email, SunPass smishing, Crypto social scam, Typosquatted URL, Legitimate newsletter) for instant testing.
+Returns dynamic attack vectors and safe baselines loaded from `data/samples.json`.
 
-### 4. Health Check
+### 7. Health Check
 `GET /api/health`
 
-Returns service health and engine capability status.
+Returns service health, engine capability status, and live threat counts.
 
 ---
 

@@ -94,6 +94,41 @@ class ThreatLensAITests(unittest.TestCase):
         titles = [f["title"] for f in response.get_json()["findings"]]
         self.assertTrue(any("Crypto" in t for t in titles))
 
+    def test_threat_intel_endpoint(self):
+        response = self.client.get("/api/threat-intel")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["status"], "active")
+        self.assertGreaterEqual(data["linguistic_vectors"], 5)
+        self.assertGreaterEqual(data["targeted_brands_count"], 20)
+        self.assertGreaterEqual(data["ml_vocabulary_size"], 10)
+
+    def test_threat_intel_reload_endpoint(self):
+        response = self.client.post("/api/threat-intel/reload")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["status"], "success")
+        self.assertIn("rules successfully hot-reloaded", data["message"])
+
+    def test_retrain_model_endpoint(self):
+        response = self.client.post("/api/retrain", json={
+            "samples": [
+                {"text": "Custom super secret phishing token xyzinvoice urgent", "label": 1},
+                {"text": "Regular team meeting discussion agenda notes", "label": 0}
+            ]
+        })
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertEqual(data["status"], "success")
+        self.assertGreater(data["vocabulary_size"], 0)
+
+    def test_vowel_consonant_ratio(self):
+        from url_analyzer import compute_vowel_consonant_ratio
+        normal_ratio = compute_vowel_consonant_ratio("google")
+        dga_ratio = compute_vowel_consonant_ratio("bcdfghjklmnpqrstvwxyz")
+        self.assertGreater(normal_ratio, 0.4)
+        self.assertLess(dga_ratio, 0.1)
+
 
 if __name__ == "__main__":
     unittest.main()

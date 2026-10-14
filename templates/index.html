@@ -58,16 +58,16 @@
         </div>
         <div class="hero-stats">
           <div class="stat-item">
-            <span class="stat-number">7</span>
+            <span class="stat-number" id="stat-vectors">{{ stats.vectors_count if stats else 7 }}</span>
             <span class="stat-label">Linguistic Vectors</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">60+</span>
+            <span class="stat-number" id="stat-brands">{{ stats.brands_count if stats else 27 }}+</span>
             <span class="stat-label">Brand Targets Monitored</span>
           </div>
           <div class="stat-item">
-            <span class="stat-number">100%</span>
-            <span class="stat-label">Local &amp; Private</span>
+            <span class="stat-number" id="stat-vocab">{{ stats.vocab_size if stats else '100+' }}</span>
+            <span class="stat-label">ML Dynamic Features</span>
           </div>
         </div>
       </div>
@@ -106,55 +106,21 @@
       </div>
 
       <div class="samples-grid" id="samples-grid">
-        <button class="sample-card" data-sample-id="paypal-email" type="button">
-          <div class="sample-icon">💳</div>
-          <div class="sample-info">
-            <span class="sample-type email">Email Phishing</span>
-            <h4>PayPal Account Suspension</h4>
-            <p>Spoofed headers, urgent 24h deadline, credential harvesting link.</p>
-          </div>
-          <span class="sample-action">Load Sample →</span>
-        </button>
-
-        <button class="sample-card" data-sample-id="sunpass-sms" type="button">
-          <div class="sample-icon">🚗</div>
-          <div class="sample-info">
-            <span class="sample-type sms">SMS / Smishing</span>
-            <h4>SunPass Unpaid Toll Scam</h4>
-            <p>Urgent late fee fine, payment pressure, deceptive portal link.</p>
-          </div>
-          <span class="sample-action">Load Sample →</span>
-        </button>
-
-        <button class="sample-card" data-sample-id="crypto-social" type="button">
-          <div class="sample-icon">🪙</div>
-          <div class="sample-info">
-            <span class="sample-type social">Social Media Scam</span>
-            <h4>Crypto Doubler Giveaway</h4>
-            <p>High return promise, Telegram pivot lure, IP-based destination.</p>
-          </div>
-          <span class="sample-action">Load Sample →</span>
-        </button>
-
-        <button class="sample-card" data-sample-id="typosquat-url" type="button">
-          <div class="sample-icon">🔤</div>
-          <div class="sample-info">
-            <span class="sample-type url">Malicious URL</span>
-            <h4>Typosquatted Brand Host</h4>
-            <p>Visual substitution (rnicrosoft), high-abuse .top TLD.</p>
-          </div>
-          <span class="sample-action">Load Sample →</span>
-        </button>
-
-        <button class="sample-card" data-sample-id="legitimate-email" type="button">
-          <div class="sample-icon">✉️</div>
-          <div class="sample-info">
-            <span class="sample-type safe">Benign Baseline</span>
-            <h4>Legitimate Developer Newsletter</h4>
-            <p>Open source release notes, standard unsubscribe footer.</p>
-          </div>
-          <span class="sample-action">Load Sample →</span>
-        </button>
+        {% if samples %}
+          {% for sample in samples %}
+          <button class="sample-card" data-sample-id="{{ sample.id }}" type="button">
+            <div class="sample-icon">{{ sample.icon or '⚠️' }}</div>
+            <div class="sample-info">
+              <span class="sample-type {{ sample.badge_class or 'email' }}">{{ sample.badge or sample.category }}</span>
+              <h4>{{ sample.label }}</h4>
+              <p>{{ sample.description }}</p>
+            </div>
+            <span class="sample-action">Load Sample →</span>
+          </button>
+          {% endfor %}
+        {% else %}
+          <p class="empty-state">Loading threat intelligence samples...</p>
+        {% endif %}
       </div>
     </section>
 

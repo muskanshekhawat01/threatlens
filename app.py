@@ -1,10 +1,12 @@
+import json
+import os
 import ipaddress
 import re
 from urllib.parse import urlsplit
 
 from flask import Flask, jsonify, render_template, request
 
-from ai_engine import analyze_linguistic_content
+from ai_engine import analyze_linguistic_content, INTEL_MANAGER, ML_CLASSIFIER
 from message_analyzer import analyze_message_content, EMAIL_HEADER_PATTERN
 from url_analyzer import analyze_url_details, SHORTENERS, MULTIPLE_PROTOCOL_PATTERN, URL_KEYWORD_PATTERN
 
@@ -79,9 +81,29 @@ def analyze_text(value, scan_type="Message"):
     return analyze_message_content(value, scan_type=scan_type)
 
 
+SAMPLES_FILE = os.path.join(os.path.dirname(__file__), "data", "samples.json")
+
+
+def _get_dynamic_samples():
+    if os.path.exists(SAMPLES_FILE):
+        try:
+            with open(SAMPLES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    stats = {
+        "vectors_count": len(INTEL_MANAGER.categories),
+        "brands_count": len(INTEL_MANAGER.targeted_brands),
+        "tlds_count": len(INTEL_MANAGER.high_abuse_tlds),
+        "vocab_size": len(ML_CLASSIFIER.vocabulary),
+    }
+    dynamic_samples = _get_dynamic_samples()
+    return render_template("index.html", stats=stats, samples=dynamic_samples)
 
 
 @app.get("/api/health")
@@ -91,9 +113,15 @@ def health():
         "service": "ThreatLens AI Threat Detection Platform",
         "engines": {
             "ml_classifier": "Probabilistic TF-IDF Naive Bayes / Logistic Regression",
-            "linguistic_engine": "7-Vector Behavioral Threat Engine",
+            "linguistic_engine": f"{len(INTEL_MANAGER.categories)}-Vector Behavioral Threat Engine",
             "url_engine": "Deep Lexical, DGA Entropy, Typosquatting & IDN Engine",
             "modality_support": ["URL", "Email", "SMS / Smishing", "Social Media", "Auto"]
+        },
+        "stats": {
+            "linguistic_vectors": len(INTEL_MANAGER.categories),
+            "targeted_brands": len(INTEL_MANAGER.targeted_brands),
+            "high_abuse_tlds": len(INTEL_MANAGER.high_abuse_tlds),
+            "ml_vocabulary_size": len(ML_CLASSIFIER.vocabulary),
         },
         "version": "2.0.0"
     })
@@ -101,67 +129,60 @@ def health():
 
 @app.get("/api/samples")
 def samples():
-    """Curated realistic security samples for rapid demonstration and testing."""
-    return jsonify([
-        {
-            "id": "paypal-email",
-            "category": "email",
-            "label": "PayPal Account Suspension Phishing Email",
-            "input": (
-                "From: service@paypal-security-update.xyz\n"
-                "Reply-To: support@fraud-response-ticket.top\n"
-                "Subject: Urgent: Your PayPal account has been suspended!\n\n"
-                "Dear customer,\n\n"
-                "We detected unauthorized access attempts on your account from an unknown IP address. "
-                "Immediate action required: your account will be permanently blocked within 24 hours "
-                "unless you verify your identity.\n\n"
-                "Click here to confirm your credentials and update billing details: "
-                "http://paypal.com.account-verification-service.xyz/login\n\n"
-                "Do not reply to this email."
-            )
-        },
-        {
-            "id": "sunpass-sms",
-            "category": "sms",
-            "label": "SunPass Unpaid Toll Smishing Lure",
-            "input": (
-                "SunPass Notice: Our records indicate you have an unpaid toll invoice balance of $12.50. "
-                "To avoid an immediate $50.00 late fee and court action, pay now via our portal: "
-                "https://sunpass-toll-billing.click/pay?id=84729"
-            )
-        },
-        {
-            "id": "crypto-social",
-            "category": "social",
-            "label": "Social Media Crypto Doubler Scam",
-            "input": (
-                "CONGRATULATIONS! You have been selected as an exclusive giveaway winner! "
-                "Elon Musk and Binance official airdrop: Send 0.1 BTC to claim 0.5 BTC instantly. "
-                "Guaranteed return! Contact my mentor on Telegram @elon_airdrop_admin or tap here: "
-                "http://192.168.1.55/binance-claim"
-            )
-        },
-        {
-            "id": "typosquat-url",
-            "category": "url",
-            "label": "Typosquatted & High-Risk TLD URL",
-            "input": "http://rnicrosoft-verify-security.top/login.php"
-        },
-        {
-            "id": "legitimate-email",
-            "category": "email",
-            "label": "Legitimate Engineering Newsletter",
-            "input": (
-                "From: team@github.com\n"
-                "Subject: GitHub Release Notes: New features available\n\n"
-                "Hello developer,\n\n"
-                "Here are the latest release notes and updates to our open source repositories. "
-                "You can review the pull request documentation and meeting notes on our main website.\n\n"
-                "Best regards,\nThe GitHub Team\n\n"
-                "Unsubscribe: https://github.com/settings/notifications"
-            )
-        }
-    ])
+    """Dynamically load and serve security samples from external data feed."""
+    return jsonify(_get_dynamic_samples())
+
+
+@app.get("/api/threat-intel")
+def get_threat_intel():
+    """Dynamically return current threat intelligence metrics and rules summary."""
+    return jsonify({
+        "status": "active",
+        "linguistic_vectors": len(INTEL_MANAGER.categories),
+        "targeted_brands_count": len(INTEL_MANAGER.targeted_brands),
+        "high_abuse_tlds_count": len(INTEL_MANAGER.high_abuse_tlds),
+        "shorteners_count": len(INTEL_MANAGER.shorteners),
+        "channel_rules_count": len(INTEL_MANAGER.channel_rules),
+        "ml_vocabulary_size": len(ML_CLASSIFIER.vocabulary),
+        "categories": [
+            {"key": k, "name": v.get("name"), "weight": v.get("weight")}
+            for k, v in INTEL_MANAGER.categories.items()
+        ]
+    })
+
+
+@app.post("/api/retrain")
+def retrain_model():
+    """Dynamically retrain the probabilistic ML model with new labeled samples at runtime."""
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict) or not isinstance(payload.get("samples"), list):
+        return jsonify(error="Provide a JSON object with 'samples' array."), 400
+    new_samples = payload["samples"]
+    ML_CLASSIFIER.train(new_samples)
+    return jsonify({
+        "status": "success",
+        "message": f"Dynamically retrained model on {len(new_samples)} samples.",
+        "vocabulary_size": len(ML_CLASSIFIER.vocabulary)
+    })
+
+
+@app.post("/api/threat-intel/reload")
+def reload_intel():
+    """Hot-reload threat intelligence feeds dynamically."""
+    try:
+        INTEL_MANAGER.reload()
+        return jsonify({
+            "status": "success",
+            "message": "Threat intelligence rules successfully hot-reloaded.",
+            "metrics": {
+                "categories": len(INTEL_MANAGER.categories),
+                "brands": len(INTEL_MANAGER.targeted_brands),
+                "tlds": len(INTEL_MANAGER.high_abuse_tlds),
+                "channel_rules": len(INTEL_MANAGER.channel_rules)
+            }
+        })
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 
 @app.post("/api/scan")

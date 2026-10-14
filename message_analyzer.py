@@ -2,7 +2,7 @@ import re
 from typing import Dict, List, Any, Optional
 from urllib.parse import urlsplit
 
-from ai_engine import analyze_linguistic_content, predict_phishing_ml
+from ai_engine import analyze_linguistic_content, predict_phishing_ml, INTEL_MANAGER
 from url_analyzer import analyze_url_details, detect_brand_spoofing
 
 
@@ -15,22 +15,6 @@ URL_PATTERN = re.compile(
 EMAIL_HEADER_PATTERN = re.compile(r"(?im)^(from|to|subject|reply-to):")
 SENDER_PATTERN = re.compile(r"(?im)^from:\s*(?:.*?<)?([a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))>?")
 REPLY_TO_PATTERN = re.compile(r"(?im)^reply-to:\s*(?:.*?<)?([a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))>?")
-GENERIC_GREETING_PATTERN = re.compile(
-    r"(?i)\b(dear (customer|user|client|member|account holder|sir/madam|valued customer)|hello dear)\b"
-)
-SUSPICIOUS_ATTACHMENT_PATTERN = re.compile(
-    r"(?i)\b\w+\.(exe|iso|scr|vbs|zip|rar|cab|bat|cmd|msi|hta|html|shtml)\b"
-)
-
-# SMS / Smishing specific lures
-SMS_TOLL_PATTERN = re.compile(r"(?i)\b(sunpass|ez-?pass|toll|turnpike|tollway|unpaid toll|traffic violation)\b")
-SMS_PACKAGE_PATTERN = re.compile(r"(?i)\b(usps|fedex|ups|dhl|parcel|package|delivery|shipment|redelivery)\b")
-SMS_BANK_PATTERN = re.compile(r"(?i)\b(chase|wells fargo|bofa|citi|bank|debit card|locked|fraud alert)\b")
-
-# Social Media scam lures
-SOCIAL_CRYPTO_LURE = re.compile(r"(?i)\b(crypto|bitcoin|btc|eth|usdt|doubler|giveaway|airdrop|binance|metamask|100x|pump)\b")
-SOCIAL_PIVOT_LURE = re.compile(r"(?i)\b(telegram|whatsapp|dm me|inbox me|contact my mentor|signal group)\b")
-SOCIAL_RECOVERY_LURE = re.compile(r"(?i)\b(hacked account|account recovery|recover your account|fix your account|instagram ban)\b")
 
 
 def _finding(title: str, detail: str, weight: int, category: str = "general") -> Dict[str, Any]:
@@ -38,7 +22,7 @@ def _finding(title: str, detail: str, weight: int, category: str = "general") ->
 
 
 def parse_email_metadata(text: str) -> Dict[str, Any]:
-    """Extract and analyze email headers and structure."""
+    """Extract and analyze email headers and structure dynamically."""
     sender_match = SENDER_PATTERN.search(text)
     reply_to_match = REPLY_TO_PATTERN.search(text)
     
@@ -52,6 +36,11 @@ def parse_email_metadata(text: str) -> Dict[str, Any]:
     if sender_domain and reply_domain and sender_domain != reply_domain:
         mismatched = True
 
+    greeting_pattern = INTEL_MANAGER.email_indicators.get("generic_greeting")
+    attachment_pattern = INTEL_MANAGER.email_indicators.get("suspicious_attachments")
+    has_generic_greeting = bool(greeting_pattern.search(text)) if greeting_pattern else False
+    suspicious_attachments = attachment_pattern.findall(text) if attachment_pattern else []
+
     return {
         "is_email": bool(EMAIL_HEADER_PATTERN.search(text)),
         "sender": sender_email,
@@ -59,8 +48,8 @@ def parse_email_metadata(text: str) -> Dict[str, Any]:
         "reply_to": reply_email,
         "reply_domain": reply_domain,
         "mismatched_reply_to": mismatched,
-        "generic_greeting": bool(GENERIC_GREETING_PATTERN.search(text)),
-        "suspicious_attachments": SUSPICIOUS_ATTACHMENT_PATTERN.findall(text),
+        "generic_greeting": has_generic_greeting,
+        "suspicious_attachments": suspicious_attachments,
     }
 
 
@@ -157,46 +146,46 @@ def analyze_message_content(
                 category="email_spoofing"
             ))
 
-    # SMS / Smishing checks
+    # SMS / Smishing dynamic checks
     if scan_type in {"SMS", "Message / SMS", "Message"}:
-        if SMS_TOLL_PATTERN.search(text) and ("fee" in text.lower() or "pay" in text.lower() or "link" in text.lower() or "http" in text.lower()):
-            findings.append(_finding(
-                "Smishing: Fake Toll Violation / SunPass Scam Lure",
-                "Matches known SMS phishing campaigns impersonating toll services (e.g., SunPass, EZ-Pass) demanding immediate payment for unpaid tolls.",
-                25,
-                category="smishing"
-            ))
-        if SMS_PACKAGE_PATTERN.search(text) and ("address" in text.lower() or "fee" in text.lower() or "reschedule" in text.lower() or "click" in text.lower() or "http" in text.lower()):
-            findings.append(_finding(
-                "Smishing: Fake Package Delivery Redelivery Scam",
-                "Matches SMS postal phishing lures impersonating USPS, FedEx, or DHL alleging an incomplete delivery address or customs fee.",
-                25,
-                category="smishing"
-            ))
-        if SMS_BANK_PATTERN.search(text) and ("blocked" in text.lower() or "locked" in text.lower() or "verify" in text.lower()):
-            findings.append(_finding(
-                "Smishing: Fake Bank Debit Card Lock Alert",
-                "Matches fraudulent SMS alerts impersonating financial institutions claiming card suspension to steal online banking logins.",
-                30,
-                category="smishing"
-            ))
+        text_lower = text.lower()
+        for rule_id, rule in INTEL_MANAGER.channel_rules.items():
+            if not rule_id.startswith("sms_"):
+                continue
+            compiled = rule.get("compiled_pattern")
+            if compiled and compiled.search(text):
+                required_kw = rule.get("required_keywords", [])
+                if not required_kw or any(kw in text_lower for kw in required_kw):
+                    findings.append(_finding(
+                        rule.get("title", "SMS Phishing Detected"),
+                        rule.get("detail", "Matches known SMS phishing lure pattern."),
+                        rule.get("weight", 25),
+                        category="smishing"
+                    ))
 
-    # Social Media scam checks
+    # Social Media scam dynamic checks
     if scan_type in {"Social Media", "Social", "Message"}:
-        if SOCIAL_CRYPTO_LURE.search(text) and SOCIAL_PIVOT_LURE.search(text):
-            findings.append(_finding(
-                "Social Media Crypto / Investment Scam",
-                "Combines cryptocurrency promotion with redirection to unmonitored channels (e.g. Telegram / WhatsApp groups), a classic trading scam pattern.",
-                25,
-                category="social_media"
-            ))
-        if SOCIAL_RECOVERY_LURE.search(text):
-            findings.append(_finding(
-                "Account Recovery / Password Reset Scam",
-                "Solicits victims of account lockouts or bans, falsely promising unauthorized account recovery for a fee.",
-                25,
-                category="social_media"
-            ))
+        for rule_id, rule in INTEL_MANAGER.channel_rules.items():
+            if not rule_id.startswith("social_"):
+                continue
+            compiled = rule.get("compiled_pattern")
+            pivot_compiled = rule.get("compiled_pivot")
+            if compiled and compiled.search(text):
+                if pivot_compiled:
+                    if pivot_compiled.search(text):
+                        findings.append(_finding(
+                            rule.get("title", "Social Media Scam"),
+                            rule.get("detail", "Combines social media scam pattern with deceptive redirection."),
+                            rule.get("weight", 25),
+                            category="social_media"
+                        ))
+                else:
+                    findings.append(_finding(
+                        rule.get("title", "Social Media Scam"),
+                        rule.get("detail", "Matches known social media scam pattern."),
+                        rule.get("weight", 25),
+                        category="social_media"
+                    ))
 
     # 3. URL Extraction and Deep Inspection
     urls = []

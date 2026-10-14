@@ -15,34 +15,7 @@ const clearInputButtons = Array.from(document.querySelectorAll(".clear-input-btn
 const HISTORY_KEY = "threatlens.scanHistory";
 const MAX_HISTORY_ITEMS = 30;
 
-// Curated sample library for instantaneous client loading
-const SAMPLE_PRESETS = {
-  "paypal-email": {
-    panel: "text",
-    contentType: "email",
-    input: `From: service@paypal-security-update.xyz\nReply-To: support@fraud-response-ticket.top\nSubject: Urgent: Your PayPal account has been suspended!\n\nDear customer,\n\nWe detected unauthorized access attempts on your account from an unknown IP address. Immediate action required: your account will be permanently blocked within 24 hours unless you verify your identity.\n\nClick here to confirm your credentials and update billing details: http://paypal.com.account-verification-service.xyz/login\n\nDo not reply to this email.`
-  },
-  "sunpass-sms": {
-    panel: "text",
-    contentType: "sms",
-    input: `SunPass Notice: Our records indicate you have an unpaid toll invoice balance of $12.50. To avoid an immediate $50.00 late fee and court action, pay now via our portal: https://sunpass-toll-billing.click/pay?id=84729`
-  },
-  "crypto-social": {
-    panel: "text",
-    contentType: "auto",
-    input: `CONGRATULATIONS! You have been selected as an exclusive giveaway winner! Elon Musk and Binance official airdrop: Send 0.1 BTC to claim 0.5 BTC instantly. Guaranteed return! Contact my mentor on Telegram @elon_airdrop_admin or tap here: http://192.168.1.55/binance-claim`
-  },
-  "typosquat-url": {
-    panel: "url",
-    contentType: "url",
-    input: `http://rnicrosoft-verify-security.top/login.php`
-  },
-  "legitimate-email": {
-    panel: "text",
-    contentType: "email",
-    input: `From: team@github.com\nSubject: GitHub Release Notes: New features available\n\nHello developer,\n\nHere are the latest release notes and updates to our open source repositories. You can review the pull request documentation and meeting notes on our main website.\n\nBest regards,\nThe GitHub Team\n\nUnsubscribe: https://github.com/settings/notifications`
-  }
-};
+let samplePresets = {};
 
 function readHistory() {
   const saved = localStorage.getItem(HISTORY_KEY);
@@ -670,30 +643,76 @@ clearHistoryButton.addEventListener("click", () => {
   }
 });
 
-// Sample Attacks Click Handlers
-sampleCards.forEach((card) => {
-  card.addEventListener("click", () => {
-    const sampleId = card.dataset.sampleId;
-    const sample = SAMPLE_PRESETS[sampleId];
-    if (!sample) return;
-
-    if (sample.panel === "url") {
-      document.querySelector("#url-input").value = sample.input;
-      selectPanel("url");
-      const form = document.querySelector("#panel-url");
-      submitScan(form);
-    } else {
-      if (textInput) {
-        textInput.value = sample.input;
-        if (characterCount) characterCount.textContent = `${textInput.value.length} / 20000`;
-      }
-      const select = document.querySelector("#content-type");
-      if (select) select.value = sample.contentType || "auto";
-      selectPanel("text");
-      const form = document.querySelector("#panel-text");
-      submitScan(form);
+function triggerSampleScan(sample) {
+  if (sample.category === "url") {
+    document.querySelector("#url-input").value = sample.input;
+    selectPanel("url");
+    const form = document.querySelector("#panel-url");
+    submitScan(form);
+  } else {
+    if (textInput) {
+      textInput.value = sample.input;
+      if (characterCount) characterCount.textContent = `${textInput.value.length} / 20000`;
     }
-  });
-});
+    const select = document.querySelector("#content-type");
+    if (select) select.value = ["email", "sms"].includes(sample.category) ? sample.category : "auto";
+    selectPanel("text");
+    const form = document.querySelector("#panel-text");
+    submitScan(form);
+  }
+}
+
+async function loadDynamicSamples() {
+  const container = document.querySelector("#samples-grid");
+  if (!container) return;
+
+  try {
+    const res = await fetch("/api/samples");
+    if (!res.ok) return;
+    const samples = await res.json();
+    if (!Array.isArray(samples) || samples.length === 0) return;
+
+    container.replaceChildren();
+    samples.forEach((sample) => {
+      samplePresets[sample.id] = sample;
+      const card = document.createElement("button");
+      card.className = "sample-card";
+      card.type = "button";
+      card.dataset.sampleId = sample.id;
+      card.innerHTML = `
+        <div class="sample-icon">${sample.icon || '⚠️'}</div>
+        <div class="sample-info">
+          <span class="sample-type ${sample.badge_class || 'email'}">${sample.badge || sample.category}</span>
+          <h4>${sample.label}</h4>
+          <p>${sample.description}</p>
+        </div>
+        <span class="sample-action">Load Sample →</span>
+      `;
+      card.addEventListener("click", () => triggerSampleScan(sample));
+      container.append(card);
+    });
+  } catch (err) {
+    console.error("Dynamic samples loading:", err);
+  }
+}
+
+async function loadDynamicIntelStats() {
+  try {
+    const res = await fetch("/api/threat-intel");
+    if (!res.ok) return;
+    const data = await res.json();
+    const vecEl = document.querySelector("#stat-vectors");
+    const brandEl = document.querySelector("#stat-brands");
+    const vocabEl = document.querySelector("#stat-vocab");
+    if (vecEl && data.linguistic_vectors) vecEl.textContent = data.linguistic_vectors;
+    if (brandEl && data.targeted_brands_count) brandEl.textContent = `${data.targeted_brands_count}+`;
+    if (vocabEl && data.ml_vocabulary_size) vocabEl.textContent = data.ml_vocabulary_size;
+  } catch (err) {
+    console.error("Dynamic intel stats:", err);
+  }
+}
+
+loadDynamicSamples();
+loadDynamicIntelStats();
 
 renderHistory();

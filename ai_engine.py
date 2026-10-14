@@ -1,130 +1,213 @@
+import json
 import math
+import os
 import re
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple, Any, Optional
+
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+INTEL_FILE = os.path.join(DATA_DIR, "threat_intelligence.json")
+CORPUS_FILE = os.path.join(DATA_DIR, "training_corpus.json")
 
 
-# Extensive linguistic pattern categories
-LINGUISTIC_CATEGORIES = {
-    "urgency": {
-        "name": "Urgent or threatening language",
-        "description": "The message uses urgency or threatens an account restriction.",
-        "weight": 20,
-        "patterns": [
-            r"\b(urgent|act now|immediately|account suspended|suspended|blocked|expire|final warning)\b",
-            r"\b(immediate action|respond immediately|account locked|24 hours|48 hours|final courtesy notice|last chance)\b",
-            r"\b(expiring soon|action required|critical alert|security notice|unauthorized access|security breach)\b",
-        ],
-    },
-    "credentials": {
-        "name": "Requests for sensitive information",
-        "description": "The message mentions credentials or sensitive financial information.",
-        "weight": 25,
-        "patterns": [
-            r"\b(password|otp|pin|bank details|cvv|passcode|login details)\b",
-            r"\b(passphrase|security code|one-time password|verification code|2fa code|mfa code|auth code)\b",
-            r"\b(cvc|card number|social security|ssn|national insurance|tax id|login credentials|seed phrase|private key)\b",
-        ],
-    },
-    "financial": {
-        "name": "Financial pressure",
-        "description": "The message applies pressure around a payment, transfer, or refund.",
-        "weight": 25,
-        "patterns": [
-            r"\b(send money|payment required|pay now|transfer money|refund|gift card|bank transfer)\b",
-            r"\b(wire transfer|western union|moneygram|cashapp|venmo transfer|bitcoin|btc|ethereum|eth|crypto wallet|cryptocurrency payment|usdt)\b",
-            r"\b(refund pending|claim refund|processing fee|tax due|overdue fee|toll fee|unpaid toll|ezpass|sunpass|invoice attached)\b",
-        ],
-    },
-    "lures_and_greed": {
-        "name": "Suspicious reward or prize",
-        "description": "The message uses reward or prize wording commonly found in lures.",
-        "weight": 20,
-        "patterns": [
-            r"\b(you have won|winner|prize|lottery|claim your reward|claim reward|free gift)\b",
-            r"\b(jackpot|sweepstakes|prize notification|claim prize|exclusive reward|cash grant|unclaimed funds|inheritance|beneficiary)\b",
-            r"\b(giveaway|airdrop|guaranteed return|100x profit|selected as winner|congratulations you won)\b",
-        ],
-    },
-    "verification_call_to_action": {
-        "name": "Suspicious verification request",
-        "description": "The message asks you to verify an account or identity, or to click through.",
-        "weight": 10,
-        "patterns": [
-            r"\b(verify your account|confirm your identity|click here|tap here|open this link|verify now)\b",
-            r"\b(validate your account|follow this link|update your profile|reactivate your account|restore access)\b",
-            r"\b(review document|sign document|docusign document|download attachment|click below|use the link below)\b",
-        ],
-    },
-    "authority_impersonation": {
-        "name": "Authority & Brand Impersonation",
-        "description": "Spoofs well-known organizations, tech platforms, government bodies, or financial institutions.",
-        "weight": 22,
-        "patterns": [
-            r"\b(microsoft security team|apple support|google security alert)\b",
-            r"\b(paypal fraud department|chase fraud alert|wells fargo security)\b",
-            r"\b(usps delivery failure|fedex shipment notice|dhl customs clearance)\b",
-            r"\b(internal revenue service|irs notice|department of revenue|law enforcement)\b",
-            r"\b(meta security|instagram verification badge|whatsapp support team)\b",
-            r"\b(geek squad|norton antivirus renewal|mcafee security subscription)\b",
-        ],
-    },
-    "extortion_fear": {
-        "name": "Blackmail & Fear-Based Extortion",
-        "description": "Claims infection by spyware, recording webcam footage, or threatening public humiliation.",
-        "weight": 30,
-        "patterns": [
-            r"\b(i know your password|recorded you through your webcam|recorded video of you)\b",
-            r"\b(compromised your device|pegasus spyware installed|trojan installed)\b",
-            r"\b(send bitcoin or i will send|blackmail|ruin your reputation)\b",
-            r"\b(warrant issued for your arrest|police warrant|court summons pending)\b",
-        ],
-    },
-}
+class ThreatIntelManager:
+    """Dynamically loads and hot-reloads threat intelligence rules from external feeds."""
+    
+    def __init__(self, intel_path: str = INTEL_FILE):
+        self.intel_path = intel_path
+        self.categories: Dict[str, Any] = {}
+        self.compiled_categories: Dict[str, Any] = {}
+        self.targeted_brands: Dict[str, str] = {}
+        self.high_abuse_tlds: Dict[str, str] = {}
+        self.shorteners: set = set()
+        self.homoglyphs: Dict[str, str] = {}
+        self.channel_rules: Dict[str, Any] = {}
+        self.email_indicators: Dict[str, Any] = {}
+        self.account_keywords_pattern: Optional[re.Pattern] = None
+        self.reload()
 
-# Compiled regex cache
-COMPILED_CATEGORIES = {
-    cat_key: {
-        "name": cat_info["name"],
-        "description": cat_info["description"],
-        "weight": cat_info["weight"],
-        "compiled": [re.compile(p, re.I) for p in cat_info["patterns"]],
-    }
-    for cat_key, cat_info in LINGUISTIC_CATEGORIES.items()
-}
+    def reload(self):
+        if not os.path.exists(self.intel_path):
+            raise FileNotFoundError(f"Threat intelligence file not found at {self.intel_path}")
+        
+        with open(self.intel_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-# Pre-calibrated ML Phishing/Scam Vocabulary and Log-Odds Weights
-# Positive weights increase phishing probability; negative weights indicate benign context.
-ML_VOCABULARY_WEIGHTS: Dict[str, float] = {
-    # High-risk Phishing & Scam tokens
-    "suspended": 2.4, "immediately": 2.2, "urgent": 2.1, "verify": 1.9,
-    "otp": 2.6, "password": 2.3, "cvv": 2.8, "ssn": 2.9, "pin": 2.0,
-    "claim": 1.8, "winner": 2.5, "lottery": 2.7, "gift card": 3.0,
-    "bitcoin": 2.4, "btc": 2.2, "crypto": 2.0, "wallet": 1.7,
-    "login": 1.5, "click here": 2.4, "tap here": 2.2, "confirm identity": 2.3,
-    "security alert": 2.0, "unauthorized": 2.1, "blocked": 1.8, "wire transfer": 2.6,
-    "sunpass": 3.2, "ezpass": 3.2, "unpaid toll": 3.4, "overdue toll": 3.4,
-    "delivery failed": 2.3, "reschedule delivery": 2.4, "redelivery": 2.5,
-    "dhl package": 2.1, "usps tracking": 2.0, "fedex parcel": 2.1,
-    "geek squad": 3.1, "norton renewal": 3.0, "mcafee subscription": 2.9,
-    "invoice attached": 2.2, "receipt attached": 1.9, "refund of": 2.0,
-    "final notice": 2.4, "courtesy notice": 2.3, "warrant": 2.7,
-    "seed phrase": 3.5, "private key": 3.2, "metamask": 2.5,
-    "airdrop": 2.6, "giveaway": 2.2, "double your": 2.8,
-    "act now": 2.2, "account locked": 2.4, "restricted access": 2.3,
-    "compromised": 2.1, "reactivate": 2.0, "validate": 1.8,
-    "billing details": 2.2, "payment method": 1.6, "credit card": 1.7,
-    "banking": 1.5, "western union": 2.8, "moneygram": 2.8,
-    "webcam": 2.9, "blackmail": 3.1, "extortion": 3.1, "trojan": 2.4,
-    "pegasus": 2.8, "recorded you": 3.0,
+        self.categories.clear()
+        self.categories.update(data.get("linguistic_categories", {}))
 
-    # Benign / Neutral indicator tokens
-    "unsubscribe": -1.8, "privacy policy": -2.0, "terms of service": -1.9,
-    "newsletter": -2.2, "receipt": -0.8, "meeting notes": -2.5,
-    "agenda": -2.4, "quarterly report": -2.6, "github": -1.5,
-    "documentation": -2.2, "open source": -2.4, "release notes": -2.3,
-    "all rights reserved": -1.7, "preferences": -1.6, "forwarded message": -1.0,
-    "pull request": -2.8, "commit": -2.5, "discussion": -2.0,
-}
+        self.targeted_brands.clear()
+        self.targeted_brands.update(data.get("targeted_brands", {}))
+
+        self.high_abuse_tlds.clear()
+        self.high_abuse_tlds.update(data.get("high_abuse_tlds", {}))
+
+        self.shorteners.clear()
+        self.shorteners.update(data.get("shorteners", []))
+
+        self.homoglyphs.clear()
+        self.homoglyphs.update(data.get("homoglyphs", {}))
+
+        keywords = data.get("account_keywords", [])
+        if keywords:
+            self.account_keywords_pattern = re.compile(f"({'|'.join(keywords)})", re.I)
+
+        # Dynamically compile regular expressions for linguistic categories
+        self.compiled_categories.clear()
+        for cat_key, cat_data in self.categories.items():
+            self.compiled_categories[cat_key] = {
+                "name": cat_data["name"],
+                "description": cat_data["description"],
+                "weight": cat_data["weight"],
+                "compiled": [re.compile(p, re.I) for p in cat_data.get("patterns", [])],
+            }
+
+        # Dynamically compile channel-specific rules (SMS smishing, social media lures)
+        self.channel_rules.clear()
+        for k, v in data.get("channel_rules", {}).items():
+            rule = dict(v)
+            if "pattern" in rule:
+                rule["compiled_pattern"] = re.compile(rule["pattern"], re.I)
+            if "pivot_pattern" in rule:
+                rule["compiled_pivot"] = re.compile(rule["pivot_pattern"], re.I)
+            self.channel_rules[k] = rule
+
+        # Dynamically compile email indicators
+        self.email_indicators.clear()
+        for k, v in data.get("email_indicators", {}).items():
+            if isinstance(v, str):
+                self.email_indicators[k] = re.compile(v, re.I)
+            else:
+                self.email_indicators[k] = v
+
+
+class DynamicProbabilisticClassifier:
+    """
+    Self-training dynamic Machine Learning Classifier.
+    Computes vocabulary, TF-IDF weights, and log-odds ratios dynamically from training data.
+    Can be dynamically retrained at runtime without restarting the server.
+    """
+
+    def __init__(self, corpus_path: str = CORPUS_FILE):
+        self.corpus_path = corpus_path
+        self.vocabulary: Dict[str, float] = {}
+        self.prior_log_odds: float = -1.2
+        self.doc_count: int = 0
+        self.train_from_file()
+
+    def _tokenize(self, text: str) -> List[str]:
+        text_lower = text.lower()
+        words = re.findall(r"\b[a-z0-9'-]+\b", text_lower)
+        # Generate unigrams and bigrams
+        tokens = list(words)
+        for i in range(len(words) - 1):
+            tokens.append(f"{words[i]} {words[i+1]}")
+        return tokens
+
+    def train_from_file(self):
+        if not os.path.exists(self.corpus_path):
+            return
+        with open(self.corpus_path, "r", encoding="utf-8") as f:
+            corpus = json.load(f)
+        self.train(corpus)
+
+    def train(self, labeled_samples: List[Dict[str, Any]]):
+        """Train model parameters dynamically from labeled text samples."""
+        self.doc_count = len(labeled_samples)
+        if self.doc_count == 0:
+            return
+
+        phish_counts: Dict[str, int] = {}
+        benign_counts: Dict[str, int] = {}
+        total_phish_words = 0
+        total_benign_words = 0
+        phish_docs = sum(1 for s in labeled_samples if s["label"] == 1)
+        benign_docs = self.doc_count - phish_docs
+
+        for sample in labeled_samples:
+            label = sample.get("label", 0)
+            tokens = self._tokenize(sample.get("text", ""))
+            target_dict = phish_counts if label == 1 else benign_counts
+            for token in tokens:
+                target_dict[token] = target_dict.get(token, 0) + 1
+                if label == 1:
+                    total_phish_words += 1
+                else:
+                    total_benign_words += 1
+
+        all_vocab = set(phish_counts.keys()).union(set(benign_counts.keys()))
+        vocab_size = len(all_vocab)
+        alpha = 1.0  # Laplace smoothing
+
+        # Compute dynamic log-odds ratios
+        weights = {}
+        for token in all_vocab:
+            p_phish = (phish_counts.get(token, 0) + alpha) / (total_phish_words + alpha * vocab_size)
+            p_benign = (benign_counts.get(token, 0) + alpha) / (total_benign_words + alpha * vocab_size)
+            log_odds = math.log(p_phish / p_benign)
+            # Filter low-relevance noise
+            if abs(log_odds) > 0.4:
+                weights[token] = round(log_odds * 1.8, 2)
+
+        self.vocabulary = weights
+        # Prior probability log-odds based on class balance
+        if benign_docs > 0 and phish_docs > 0:
+            self.prior_log_odds = round(math.log(phish_docs / benign_docs) - 0.8, 2)
+
+    def predict(self, text: str) -> Dict[str, Any]:
+        """Dynamically evaluate text using TF-IDF weighted log-odds scoring."""
+        text_lower = text.lower()
+        words = re.findall(r"\b[a-z0-9'-]+\b", text_lower)
+        word_count = max(len(words), 1)
+
+        base_log_odds = self.prior_log_odds
+        active_features = []
+
+        for token, weight in self.vocabulary.items():
+            freq = 0
+            if " " in token:
+                if token in text_lower:
+                    freq = text_lower.count(token)
+            else:
+                freq = words.count(token)
+
+            if freq > 0:
+                # Dynamic TF-IDF proxy
+                tfidf = math.log1p(freq) * (1.0 + math.log(100.0 / (word_count + 1)))
+                impact = weight * min(tfidf, 3.2)
+                base_log_odds += impact
+                active_features.append({
+                    "token": token,
+                    "weight": round(impact, 2),
+                    "sentiment": "Phishing Signal" if weight > 0 else "Benign Indicator"
+                })
+
+        # Sigmoid activation
+        bounded_log_odds = max(min(base_log_odds, 12.0), -12.0)
+        probability = 1.0 / (1.0 + math.exp(-bounded_log_odds))
+
+        active_features.sort(key=lambda x: abs(x["weight"]), reverse=True)
+
+        if probability >= 0.70:
+            verdict = "High Confidence Phishing / Scam"
+        elif probability >= 0.45:
+            verdict = "Suspicious"
+        elif probability >= 0.25:
+            verdict = "Low Risk / Informational"
+        else:
+            verdict = "Likely Benign"
+
+        return {
+            "probability": round(probability, 4),
+            "percentage": round(probability * 100, 1),
+            "verdict": verdict,
+            "log_odds": round(base_log_odds, 2),
+            "top_features": active_features[:8],
+        }
+
+
+# Global dynamic instances
+INTEL_MANAGER = ThreatIntelManager()
+ML_CLASSIFIER = DynamicProbabilisticClassifier()
 
 
 def compute_shannon_entropy(text: str) -> float:
@@ -137,12 +220,12 @@ def compute_shannon_entropy(text: str) -> float:
 
 
 def extract_linguistic_signals(text: str) -> Tuple[List[Dict[str, Any]], Dict[str, int], List[str]]:
-    """Scan text across linguistic categories and extract structured findings and matched spans."""
+    """Scan text across dynamically loaded linguistic categories."""
     findings = []
     category_scores = {}
     matched_phrases = []
 
-    for cat_key, cat_data in COMPILED_CATEGORIES.items():
+    for cat_key, cat_data in INTEL_MANAGER.compiled_categories.items():
         cat_matches = []
         for pattern in cat_data["compiled"]:
             for match in pattern.finditer(text):
@@ -167,7 +250,7 @@ def extract_linguistic_signals(text: str) -> Tuple[List[Dict[str, Any]], Dict[st
 
 
 def compute_stylometrics(text: str) -> Dict[str, Any]:
-    """Analyze stylometric anomalies: SHOUTING, punctuation bursts, and entropy."""
+    """Dynamically analyze stylometric anomalies: SHOUTING, punctuation bursts, and entropy."""
     length = len(text)
     if length == 0:
         return {"upper_ratio": 0.0, "punct_bursts": 0, "entropy": 0.0, "anomalous": False}
@@ -189,87 +272,22 @@ def compute_stylometrics(text: str) -> Dict[str, Any]:
 
 
 def predict_phishing_ml(text: str) -> Dict[str, Any]:
-    """
-    Lightweight, deterministic Probabilistic ML Classifier.
-    Computes TF-IDF-weighted log-odds score against pre-calibrated security corpus.
-    Outputs a calibrated probability in [0.0, 1.0], classification label, and feature importance.
-    """
-    text_lower = text.lower()
-    words = re.findall(r"\b[a-z0-9'-]+\b", text_lower)
-    word_count = max(len(words), 1)
-
-    # Base prior log-odds for general incoming messages (slight benign bias prior)
-    base_log_odds = -1.2
-    active_features = []
-
-    # Check unigrams and bigrams
-    checked_tokens = set()
-    for token, weight in ML_VOCABULARY_WEIGHTS.items():
-        if " " in token:
-            # Bigram match
-            if token in text_lower:
-                freq = text_lower.count(token)
-                tfidf_proxy = math.log1p(freq) * (1.0 + math.log(100.0 / (word_count + 1)))
-                impact = weight * min(tfidf_proxy, 3.0)
-                base_log_odds += impact
-                active_features.append({
-                    "token": token,
-                    "weight": round(impact, 2),
-                    "sentiment": "Phishing Signal" if weight > 0 else "Benign Indicator"
-                })
-        else:
-            # Unigram match
-            freq = words.count(token)
-            if freq > 0:
-                tfidf_proxy = math.log1p(freq) * (1.0 + math.log(100.0 / (word_count + 1)))
-                impact = weight * min(tfidf_proxy, 3.0)
-                base_log_odds += impact
-                active_features.append({
-                    "token": token,
-                    "weight": round(impact, 2),
-                    "sentiment": "Phishing Signal" if weight > 0 else "Benign Indicator"
-                })
-
-    # Convert log-odds to calibrated sigmoid probability
-    # sigmoid(z) = 1 / (1 + exp(-z))
-    # Clip z to avoid overflow
-    bounded_log_odds = max(min(base_log_odds, 12.0), -12.0)
-    probability = 1.0 / (1.0 + math.exp(-bounded_log_odds))
-
-    # Sort top features by absolute magnitude
-    active_features.sort(key=lambda x: abs(x["weight"]), reverse=True)
-
-    if probability >= 0.75:
-        verdict = "High Confidence Phishing / Scam"
-    elif probability >= 0.50:
-        verdict = "Suspicious"
-    elif probability >= 0.25:
-        verdict = "Low Risk / Informational"
-    else:
-        verdict = "Likely Benign"
-
-    return {
-        "probability": round(probability, 4),
-        "percentage": round(probability * 100, 1),
-        "verdict": verdict,
-        "log_odds": round(base_log_odds, 2),
-        "top_features": active_features[:8],
-    }
+    """Execute dynamic ML probabilistic classifier."""
+    return ML_CLASSIFIER.predict(text)
 
 
 def analyze_linguistic_content(text: str) -> Dict[str, Any]:
-    """Complete AI and linguistic analysis orchestration."""
+    """Complete dynamic AI and linguistic analysis orchestration."""
     findings, category_scores, matched_phrases = extract_linguistic_signals(text)
     stylometrics = compute_stylometrics(text)
     ml_result = predict_phishing_ml(text)
 
-    # Stylometric finding if anomalous
     if stylometrics["anomalous"]:
         if stylometrics["upper_ratio"] > 0.45:
             findings.append({
                 "category": "stylometrics",
                 "title": "Abnormal Capitalization (Shouting)",
-                "detail": f"{int(stylometrics['upper_ratio'] * 100)}% of characters are uppercase, a recognized sign of urgent psychological coercion.",
+                "detail": f"{int(stylometrics['upper_ratio'] * 100)}% of characters are uppercase, an indicator of urgent psychological coercion.",
                 "weight": 10,
                 "matches": [],
             })
@@ -282,10 +300,7 @@ def analyze_linguistic_content(text: str) -> Dict[str, Any]:
                 "matches": [],
             })
 
-    # Combine linguistic weights into aggregated score (capped at 100)
     total_linguistic_weight = sum(item["weight"] for item in findings)
-    
-    # Blended AI linguistic score factoring ML probability
     ml_scaled = ml_result["percentage"]
     blended_score = min(int(round(0.6 * total_linguistic_weight + 0.4 * ml_scaled)), 100)
 
