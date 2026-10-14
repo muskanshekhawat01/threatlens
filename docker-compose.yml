@@ -1,0 +1,10 @@
+services:
+  threatlens:
+    build: .
+    container_name: threatlens-ai
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production

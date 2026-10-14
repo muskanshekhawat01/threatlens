@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070c15">
+  <title>ThreatLens — AI-Based Phishing, Scam Message & Malicious URL Detection</title>
+  <meta name="description" content="AI-based system for detecting malicious emails, SMS, social media scams, and deceptive URLs using probabilistic machine learning and deep linguistic analysis.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <div class="ambient-glow" aria-hidden="true"></div>
+
+  <header class="navbar">
+    <a class="logo" href="/" aria-label="ThreatLens AI home">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
+      <span>Threat<span class="highlight">Lens</span></span>
+      <span class="ai-badge">AI Core v2.0</span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#scanner">Scanner</a>
+      <a href="#samples">Samples</a>
+      <a href="#features">Features</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#history">History</a>
+      <a href="#about">About</a>
+    </nav>
+    <div class="nav-status">
+      <span class="status-indicator-dot"></span>
+      <span class="status-indicator-text">ML Engine Online</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <div class="badge-pill">
+          <span class="pulse-dot"></span>
+          AI-POWERED THREAT INTELLIGENCE
+        </div>
+        <h1 id="page-title">Detect Phishing, Scams &amp; Fake URLs <span>before you click.</span></h1>
+        <p class="description">
+          An advanced AI-powered security engine that analyzes message text, psychological urgency cues, 
+          credential harvesting lures, and deceptive domain metadata to protect against modern cyber fraud.
+        </p>
+        <div class="hero-actions">
+          <a class="main-button primary" href="#scanner">Launch Threat Scanner <span aria-hidden="true">→</span></a>
+          <a class="main-button secondary" href="#samples">Explore Sample Attacks</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number">7</span>
+            <span class="stat-label">Linguistic Vectors</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">60+</span>
+            <span class="stat-label">Brand Targets Monitored</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">Local &amp; Private</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hero-card" aria-label="AI Defense Architecture">
+        <div class="card-radar-glow" aria-hidden="true"></div>
+        <div class="shield" aria-hidden="true">
+          <svg viewBox="0 0 64 64" focusable="false">
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#40e5d0"/>
+                <stop offset="100%" stop-color="#3b82f6"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#shieldGrad)" fill-opacity="0.15" stroke="url(#shieldGrad)" stroke-width="2.5" d="M32 5 10 14v15c0 14 9.4 25.9 22 30 12.6-4.1 22-16 22-30V14L32 5Z"></path>
+            <path stroke="#40e5d0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="m22 32 7 7 14-15"></path>
+          </svg>
+        </div>
+        <h2>Multi-Modal Threat Defense</h2>
+        <p>Real-time machine learning inference, DGA domain entropy analysis, and smishing heuristic detection.</p>
+        <div class="radar-status-list">
+          <div class="radar-item active"><span class="radar-dot"></span> ML Phishing Probability Classifier</div>
+          <div class="radar-item active"><span class="radar-dot"></span> Typosquatting &amp; Brand Spoofing Recon</div>
+          <div class="radar-item active"><span class="radar-dot"></span> Linguistic Coercion &amp; Scarcity Scoring</div>
+          <div class="radar-item active"><span class="radar-dot"></span> High-Abuse TLD &amp; Homoglyphs Inspection</div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Interactive Sample Attacks Section -->
+    <section class="samples-section" id="samples" aria-labelledby="samples-title">
+      <div class="section-heading">
+        <p class="tag">INTERACTIVE TEST LAB</p>
+        <h2 id="samples-title">Try Real-World Threat Scenarios</h2>
+        <p>Test the detection engines instantly with these curated attack patterns and safe baselines.</p>
+      </div>
+
+      <div class="samples-grid" id="samples-grid">
+        <button class="sample-card" data-sample-id="paypal-email" type="button">
+          <div class="sample-icon">💳</div>
+          <div class="sample-info">
+            <span class="sample-type email">Email Phishing</span>
+            <h4>PayPal Account Suspension</h4>
+            <p>Spoofed headers, urgent 24h deadline, credential harvesting link.</p>
+          </div>
+          <span class="sample-action">Load Sample →</span>
+        </button>
+
+        <button class="sample-card" data-sample-id="sunpass-sms" type="button">
+          <div class="sample-icon">🚗</div>
+          <div class="sample-info">
+            <span class="sample-type sms">SMS / Smishing</span>
+            <h4>SunPass Unpaid Toll Scam</h4>
+            <p>Urgent late fee fine, payment pressure, deceptive portal link.</p>
+          </div>
+          <span class="sample-action">Load Sample →</span>
+        </button>
+
+        <button class="sample-card" data-sample-id="crypto-social" type="button">
+          <div class="sample-icon">🪙</div>
+          <div class="sample-info">
+            <span class="sample-type social">Social Media Scam</span>
+            <h4>Crypto Doubler Giveaway</h4>
+            <p>High return promise, Telegram pivot lure, IP-based destination.</p>
+          </div>
+          <span class="sample-action">Load Sample →</span>
+        </button>
+
+        <button class="sample-card" data-sample-id="typosquat-url" type="button">
+          <div class="sample-icon">🔤</div>
+          <div class="sample-info">
+            <span class="sample-type url">Malicious URL</span>
+            <h4>Typosquatted Brand Host</h4>
+            <p>Visual substitution (rnicrosoft), high-abuse .top TLD.</p>
+          </div>
+          <span class="sample-action">Load Sample →</span>
+        </button>
+
+        <button class="sample-card" data-sample-id="legitimate-email" type="button">
+          <div class="sample-icon">✉️</div>
+          <div class="sample-info">
+            <span class="sample-type safe">Benign Baseline</span>
+            <h4>Legitimate Developer Newsletter</h4>
+            <p>Open source release notes, standard unsubscribe footer.</p>
+          </div>
+          <span class="sample-action">Load Sample →</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Main Scanner Section -->
+    <section class="scanner-section" id="scanner" aria-labelledby="scanner-title">
+      <div class="section-heading">
+        <p class="tag">AI THREAT SCANNER</p>
+        <h2 id="scanner-title">Analyze Suspicious Content</h2>
+        <p>Inspect URLs, emails, SMS text, or social media messages for deceptive patterns.</p>
+      </div>
+
+      <section class="scanner-card" aria-label="Threat scanner">
+        <div class="tabs" role="tablist" aria-label="Scan type">
+          <button class="tab active" id="tab-url" role="tab" aria-selected="true" aria-controls="panel-url" data-panel="url" type="button">
+            <span class="tab-icon">🔗</span> URL Scanner
+          </button>
+          <button class="tab" id="tab-text" role="tab" aria-selected="false" aria-controls="panel-text" data-panel="text" type="button">
+            <span class="tab-icon">✉️</span> Message / Email
+          </button>
+          <button class="tab" id="tab-social" role="tab" aria-selected="false" aria-controls="panel-social" data-panel="social" type="button">
+            <span class="tab-icon">💬</span> Social Media
+          </button>
+          <button class="tab" id="tab-batch" role="tab" aria-selected="false" aria-controls="panel-batch" data-panel="batch" type="button">
+            <span class="tab-icon">⚡</span> Batch Scanner
+          </button>
+        </div>
+
+        <!-- URL Scanner Form -->
+        <form class="scan-form is-visible" id="panel-url" role="tabpanel" aria-labelledby="tab-url" data-type="url">
+          <div class="form-header">
+            <label for="url-input">Target URL to inspect</label>
+            <button class="clear-input-btn" type="button" data-target="url-input">Clear</button>
+          </div>
+          <div class="input-wrapper">
+            <span class="input-icon">🌐</span>
+            <input id="url-input" name="input" type="text" inputmode="url" maxlength="2048" placeholder="https://login.microsoft.account-verify.xyz/update" autocomplete="url" required>
+          </div>
+          <div class="form-footer">
+            <span class="hint-text">Checks for typosquatting, high-risk TLDs, DGA entropy, homoglyphs, and IP masking</span>
+            <button class="scan-button" type="submit">Analyze URL <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
+
+        <!-- Message / Email Scanner Form -->
+        <form class="scan-form" id="panel-text" role="tabpanel" aria-labelledby="tab-text" data-type="text" hidden>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="content-type">Analysis Modality</label>
+              <select id="content-type" name="content-type">
+                <option value="auto">Auto-detect (Email headers or SMS/Chat)</option>
+                <option value="email">Email (Includes sender &amp; Reply-To spoof checks)</option>
+                <option value="sms">SMS / Smishing (Toll scams, delivery alerts)</option>
+                <option value="message">General Message</option>
+              </select>
+            </div>
+            <div class="form-group align-end">
+              <button class="clear-input-btn" type="button" data-target="text-input">Clear</button>
+            </div>
+          </div>
+
+          <label for="text-input">Paste Message or Email Content</label>
+          <textarea id="text-input" name="input" maxlength="20000" placeholder="Paste suspicious email headers, SMS text, or body content. Any included URLs will be extracted and evaluated automatically." required></textarea>
+          
+          <div class="counter">
+            <span class="privacy-note">🔒 Evaluated locally with zero cloud leakage</span>
+            <span id="count" aria-live="polite">0 / 20000</span>
+          </div>
+
+          <button class="scan-button" type="submit">Analyze Message <span aria-hidden="true">→</span></button>
+        </form>
+
+        <!-- Social Media Scanner Form -->
+        <form class="scan-form" id="panel-social" role="tabpanel" aria-labelledby="tab-social" data-type="social" hidden>
+          <div class="form-header">
+            <label for="social-input">Paste Social Media Post, DM or Chat Message</label>
+            <button class="clear-input-btn" type="button" data-target="social-input">Clear</button>
+          </div>
+          <textarea id="social-input" name="input" maxlength="20000" placeholder="Paste suspicious direct messages (DMs), Telegram/WhatsApp trading pitches, crypto giveaways, or fake account recovery offers." required></textarea>
+          <div class="counter">
+            <span>Evaluates investment scam triggers, external channel pivots &amp; crypto theft lures</span>
+            <span id="social-count" aria-live="polite">0 / 20000</span>
+          </div>
+          <button class="scan-button" type="submit">Analyze Social Message <span aria-hidden="true">→</span></button>
+        </form>
+
+        <!-- Batch Scanner Form -->
+        <form class="scan-form" id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" data-type="batch" hidden>
+          <div class="form-header">
+            <label for="batch-input">Batch Screening (URLs or Messages, one per line, max 20)</label>
+            <button class="clear-input-btn" type="button" data-target="batch-input">Clear</button>
+          </div>
+          <textarea id="batch-input" name="input" rows="7" placeholder="https://example1.com/login&#10;https://rnicrosoft-update.top&#10;Urgent: Your account is suspended, click here: http://bit.ly/3x" required></textarea>
+          <div class="counter">
+            <span>High-throughput triage for incident response and threat monitoring</span>
+            <span id="batch-count">0 items</span>
+          </div>
+          <button class="scan-button" type="submit">Screen Batch <span aria-hidden="true">→</span></button>
+        </form>
+
+        <div class="error scan-message" id="scan-message" role="status" aria-live="polite" hidden></div>
+        
+        <!-- Interactive Intelligence Result Panel -->
+        <section class="result result-panel" id="result-panel" aria-live="polite" hidden></section>
+      </section>
+    </section>
+
+    <!-- Scan History Section -->
+    <section class="history-section" id="history" aria-labelledby="history-title">
+      <div class="section-heading">
+        <p class="tag">YOUR RECENT SCANS</p>
+        <h2 id="history-title">Scan history</h2>
+        <p>History is saved only in this browser and includes the text you scanned.</p>
+      </div>
+      <section class="history-card" aria-label="Recent scan history">
+        <div class="history-header">
+          <div class="history-filter-wrapper">
+            <input type="text" id="history-search" class="history-search" placeholder="Search saved scans..." aria-label="Search scan history">
+          </div>
+          <div class="history-controls">
+            <p id="history-status" class="history-status" role="status" aria-live="polite"></p>
+            <button class="clear-history" id="clear-history" type="button">Clear history</button>
+          </div>
+        </div>
+        <p class="history-empty" id="history-empty">Your completed scans will appear here.</p>
+        <ul class="history-list" id="history-list" aria-label="Saved scans"></ul>
+      </section>
+    </section>
+
+    <!-- Threat Detection Features Section -->
+    <section class="features" id="features" aria-labelledby="features-title">
+      <div class="section-heading">
+        <p class="tag">DETECTION CAPABILITIES</p>
+        <h2 id="features-title">Multi-Layered AI Threat Identification</h2>
+        <p>Engineered to expose the psychological, structural, and technical artifacts of online fraud.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-badge">NLP &amp; ML</div>
+          <div class="feature-icon">🧠</div>
+          <h3>Probabilistic Machine Learning</h3>
+          <p>Trained TF-IDF vectorizer and log-odds classifier estimating calibrated phishing likelihood and extracting high-impact vocabulary tokens.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-badge">Linguistics</div>
+          <div class="feature-icon">⚡</div>
+          <h3>7-Vector Behavioral Analysis</h3>
+          <p>Flags coercive urgency, credential theft, financial pressure, lottery/prize lures, authority impersonation, and extortion intimidation.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-badge">Domain Recon</div>
+          <div class="feature-icon">🔍</div>
+          <h3>Typosquatting &amp; Brand Spoofing</h3>
+          <p>Levenshtein distance calculations and visual substitution analysis against 60+ targeted enterprise, banking, and crypto brands.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-badge">URL Defense</div>
+          <div class="feature-icon">🌐</div>
+          <h3>High-Abuse TLDs &amp; DGA Entropy</h3>
+          <p>Monitors elevated-risk top-level domains (.xyz, .top, .buzz) and computes Shannon entropy to unmask botnet Domain Generation Algorithms.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-badge">Email Security</div>
+          <div class="feature-icon">✉️</div>
+          <h3>Email Spoofing &amp; RFC Inspection</h3>
+          <p>Dissects From vs. Reply-To domain discrepancies, flags generic greetings, and identifies dangerous executable or archive attachments.</p>
+        </article>
+
+        <article class="feature-card">
+          <div class="feature-badge">Anti-Evasion</div>
+          <div class="feature-icon">🛡️</div>
+          <h3>Homoglyphs &amp; Obfuscation</h3>
+          <p>Detects Cyrillic and Greek homoglyph counterfeits, Punycode IDNs, embedded credentials (@ trick), and shortener redirect traps.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Architecture & Methodology Section -->
+    <section class="architecture-section" id="architecture" aria-labelledby="arch-title">
+      <div class="section-heading">
+        <p class="tag">SYSTEM ARCHITECTURE</p>
+        <h2 id="arch-title">How ThreatLens Evaluates Threats</h2>
+      </div>
+      <div class="arch-container">
+        <div class="arch-step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h4>Ingestion &amp; Normalization</h4>
+            <p>De-fanging cleanups (hxxp://, [.]), RFC email header parsing, and recursive embedded URL extraction.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h4>Dual-Engine Analysis</h4>
+            <p>Parallel processing through the Probabilistic ML classifier and the Deep Lexical / Typosquatting engine.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h4>Heuristic Corroboration</h4>
+            <p>Cross-referencing domain entropy, suspicious TLD reputations, and stylometric shouting indicators.</p>
+          </div>
+        </div>
+        <div class="arch-step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h4>Threat Scoring &amp; Guidance</h4>
+            <p>Synthesis into an explainable 0–100 threat score with itemized findings and concrete safety recommendations.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="about" id="about" aria-labelledby="about-title">
+      <h2 id="about-title">Private by design. Honest about the limits.</h2>
+      <p>ThreatLens uses local, rule-based checks. A score is not a calibrated probability, and a low score cannot guarantee that a link or message is safe. Verify unexpected requests independently through trusted channels.</p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-brand">
+        <div class="logo">Threat<span>Lens</span></div>
+        <p>AI-Powered Threat Intelligence, Phishing Defense &amp; Malicious URL Reconnaissance.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <h5>Engine</h5>
+          <a href="#scanner">Scanner</a>
+          <a href="#samples">Sample Attacks</a>
+          <a href="#features">Detection Signals</a>
+        </div>
+        <div>
+          <h5>Platform</h5>
+          <a href="#architecture">Architecture</a>
+          <a href="#history">History</a>
+          <a href="#about">Ethics &amp; Disclosure</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 ThreatLens Project. Open-Source AI Threat Defense.</p>
+      <p>Simple checks. Safer choices.</p>
+    </div>
+  </footer>
+</body>
+</html>
