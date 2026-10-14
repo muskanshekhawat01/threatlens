@@ -3,11 +3,7 @@ const forms = Array.from(document.querySelectorAll(".scan-form"));
 const message = document.querySelector("#scan-message");
 const resultPanel = document.querySelector("#result-panel");
 const textInput = document.querySelector("#text-input");
-const socialInput = document.querySelector("#social-input");
-const batchInput = document.querySelector("#batch-input");
 const characterCount = document.querySelector("#count");
-const socialCount = document.querySelector("#social-count");
-const batchCount = document.querySelector("#batch-count");
 const historyList = document.querySelector("#history-list");
 const historyEmpty = document.querySelector("#history-empty");
 const historyStatus = document.querySelector("#history-status");
@@ -32,8 +28,8 @@ const SAMPLE_PRESETS = {
     input: `SunPass Notice: Our records indicate you have an unpaid toll invoice balance of $12.50. To avoid an immediate $50.00 late fee and court action, pay now via our portal: https://sunpass-toll-billing.click/pay?id=84729`
   },
   "crypto-social": {
-    panel: "social",
-    contentType: "social",
+    panel: "text",
+    contentType: "auto",
     input: `CONGRATULATIONS! You have been selected as an exclusive giveaway winner! Elon Musk and Binance official airdrop: Send 0.1 BTC to claim 0.5 BTC instantly. Guaranteed return! Contact my mentor on Telegram @elon_airdrop_admin or tap here: http://192.168.1.55/binance-claim`
   },
   "typosquat-url": {
@@ -164,9 +160,6 @@ function openHistoryEntry(entry) {
   if (entry.scanType === "url") {
     document.querySelector("#url-input").value = entry.input;
     selectPanel("url");
-  } else if (entry.scanType === "social") {
-    if (socialInput) socialInput.value = entry.input;
-    selectPanel("social");
   } else {
     textInput.value = entry.input;
     const select = document.querySelector("#content-type");
@@ -651,23 +644,10 @@ clearInputButtons.forEach((btn) => {
   });
 });
 
-// Character Counters
-if (textInput) {
+// Character Counter
+if (textInput && characterCount) {
   textInput.addEventListener("input", () => {
-    if (characterCount) characterCount.textContent = `${textInput.value.length} / 20000`;
-  });
-}
-
-if (socialInput) {
-  socialInput.addEventListener("input", () => {
-    if (socialCount) socialCount.textContent = `${socialInput.value.length} / 20000`;
-  });
-}
-
-if (batchInput) {
-  batchInput.addEventListener("input", () => {
-    const count = batchInput.value.split("\n").map(l => l.trim()).filter(Boolean).length;
-    if (batchCount) batchCount.textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+    characterCount.textContent = `${textInput.value.length} / 20000`;
   });
 }
 
@@ -702,21 +682,13 @@ sampleCards.forEach((card) => {
       selectPanel("url");
       const form = document.querySelector("#panel-url");
       submitScan(form);
-    } else if (sample.panel === "social") {
-      if (socialInput) {
-        socialInput.value = sample.input;
-        if (socialCount) socialCount.textContent = `${socialInput.value.length} / 20000`;
-      }
-      selectPanel("social");
-      const form = document.querySelector("#panel-social");
-      submitScan(form);
     } else {
       if (textInput) {
         textInput.value = sample.input;
         if (characterCount) characterCount.textContent = `${textInput.value.length} / 20000`;
       }
       const select = document.querySelector("#content-type");
-      if (select) select.value = sample.contentType;
+      if (select) select.value = sample.contentType || "auto";
       selectPanel("text");
       const form = document.querySelector("#panel-text");
       submitScan(form);

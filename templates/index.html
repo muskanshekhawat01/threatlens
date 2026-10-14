@@ -174,12 +174,6 @@
           <button class="tab" id="tab-text" role="tab" aria-selected="false" aria-controls="panel-text" data-panel="text" type="button">
             <span class="tab-icon">✉️</span> Message / Email
           </button>
-          <button class="tab" id="tab-social" role="tab" aria-selected="false" aria-controls="panel-social" data-panel="social" type="button">
-            <span class="tab-icon">💬</span> Social Media
-          </button>
-          <button class="tab" id="tab-batch" role="tab" aria-selected="false" aria-controls="panel-batch" data-panel="batch" type="button">
-            <span class="tab-icon">⚡</span> Batch Scanner
-          </button>
         </div>
 
         <!-- URL Scanner Form -->
@@ -224,34 +218,6 @@
           </div>
 
           <button class="scan-button" type="submit">Analyze Message <span aria-hidden="true">→</span></button>
-        </form>
-
-        <!-- Social Media Scanner Form -->
-        <form class="scan-form" id="panel-social" role="tabpanel" aria-labelledby="tab-social" data-type="social" hidden>
-          <div class="form-header">
-            <label for="social-input">Paste Social Media Post, DM or Chat Message</label>
-            <button class="clear-input-btn" type="button" data-target="social-input">Clear</button>
-          </div>
-          <textarea id="social-input" name="input" maxlength="20000" placeholder="Paste suspicious direct messages (DMs), Telegram/WhatsApp trading pitches, crypto giveaways, or fake account recovery offers." required></textarea>
-          <div class="counter">
-            <span>Evaluates investment scam triggers, external channel pivots &amp; crypto theft lures</span>
-            <span id="social-count" aria-live="polite">0 / 20000</span>
-          </div>
-          <button class="scan-button" type="submit">Analyze Social Message <span aria-hidden="true">→</span></button>
-        </form>
-
-        <!-- Batch Scanner Form -->
-        <form class="scan-form" id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" data-type="batch" hidden>
-          <div class="form-header">
-            <label for="batch-input">Batch Screening (URLs or Messages, one per line, max 20)</label>
-            <button class="clear-input-btn" type="button" data-target="batch-input">Clear</button>
-          </div>
-          <textarea id="batch-input" name="input" rows="7" placeholder="https://example1.com/login&#10;https://rnicrosoft-update.top&#10;Urgent: Your account is suspended, click here: http://bit.ly/3x" required></textarea>
-          <div class="counter">
-            <span>High-throughput triage for incident response and threat monitoring</span>
-            <span id="batch-count">0 items</span>
-          </div>
-          <button class="scan-button" type="submit">Screen Batch <span aria-hidden="true">→</span></button>
         </form>
 
         <div class="error scan-message" id="scan-message" role="status" aria-live="polite" hidden></div>
